@@ -44,21 +44,33 @@
       padding: 0.5rem;
       margin-top: 0.5rem;
     }
+    .liste-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.5rem;
+      background: #222;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      margin: 0.5rem 0;
+      cursor: pointer;
+    }
+    .liste-btn:hover {
+      background: #333;
+    }
   </style>
 </head>
 <body>
   <h1>🎯 ATM9 Multi-List Tracker</h1>
 
   <div class="list-select">
-    <label for="pseudo">Pseudo :</label>
+    <label for="pseudo">Entrez votre pseudo :</label>
     <input type="text" id="pseudo" placeholder="Ex: Tom" />
-
-    <label for="listes">Sélection de la liste :</label>
-    <select id="listes"></select>
-
-    <button onclick="loadTaches()">Charger</button>
+    <button onclick="rechercherListes()">Rechercher mes listes</button>
   </div>
 
+  <div id="listeGroup"></div>
   <div id="objectifs"></div>
 
   <script>
@@ -71,21 +83,38 @@
     let currentListe = null;
     let paliersMap = {};
 
-    async function loadTaches() {
+    async function rechercherListes() {
       const pseudo = document.getElementById("pseudo").value.trim();
-      const select = document.getElementById("listes");
-      currentListe = select.value;
+      if (!pseudo) return alert("Entrez un pseudo valide.");
 
-      if (!pseudo || !currentListe) return alert("Pseudo et liste requis.");
-
-      const { data: userData } = await supabase
+      const { data: userData, error } = await supabase
         .from("utilisateurs")
         .select("id")
         .eq("pseudo", pseudo)
         .single();
 
-      if (!userData) return alert("Utilisateur non trouvé.");
+      if (!userData || error) return alert("Utilisateur introuvable.");
       currentUser = userData.id;
+
+      const { data: listes } = await supabase
+        .from("listes")
+        .select("id")
+        .eq("user_id", currentUser);
+
+      const listeGroup = document.getElementById("listeGroup");
+      listeGroup.innerHTML = `<h2>Listes de ${pseudo}</h2>`;
+
+      listes.forEach(liste => {
+        const btn = document.createElement("button");
+        btn.className = "liste-btn";
+        btn.textContent = `Liste #${liste.id}`;
+        btn.onclick = () => loadTaches(liste.id);
+        listeGroup.appendChild(btn);
+      });
+    }
+
+    async function loadTaches(listeId) {
+      currentListe = listeId;
 
       const { data: paliers } = await supabase
         .from("paliers")
@@ -141,19 +170,6 @@
         .update({ terminee })
         .eq("id", id);
     }
-
-    async function chargerListes() {
-      const { data } = await supabase.from("listes").select("id");
-      const select = document.getElementById("listes");
-      data.forEach(row => {
-        const opt = document.createElement("option");
-        opt.value = row.id;
-        opt.textContent = "Liste #" + row.id;
-        select.appendChild(opt);
-      });
-    }
-
-    window.onload = chargerListes;
   </script>
 </body>
 </html>
