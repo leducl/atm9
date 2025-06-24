@@ -112,9 +112,6 @@
         currentUser = name;
       }
 
-      if (!currentUser || currentUser.toLowerCase() === "template") {
-        return alert("Pseudo invalide ou réservé. Choisis-en un autre.");
-      }
 
       localStorage.setItem("atm9_user", currentUser);
       document.getElementById("login").style.display = "none";
