@@ -94,7 +94,7 @@
   <script>
     const SUPABASE_URL = "https://glercnffjbmetbystnwi.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsZXJjbmZmamJtZXRieXN0bndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NjgwNDQsImV4cCI6MjA2NjM0NDA0NH0.Z9JvWS5zNp8rqyAVkSEIiVpB63gxM5g8e8bL6u6C64w";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let currentUser = localStorage.getItem("atm9_user") || "";
 
@@ -122,7 +122,7 @@
       const container = document.getElementById("objectives");
       container.innerHTML = "<h2>Chargement des objectifs...</h2>";
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from("objectives")
         .select("*")
         .eq("username", currentUser);
@@ -145,7 +145,7 @@
     }
 
     async function cloneTemplate() {
-      const { data: template } = await supabase
+      const { data: template } = await supabaseClient
         .from("objectives")
         .select("*")
         .eq("username", "template");
@@ -156,13 +156,13 @@
         completed: false
       }));
 
-      const { error } = await supabase.from("objectives").insert(newData);
+      const { error } = await supabaseClient.from("objectives").insert(newData);
       if (error) return alert("Erreur lors du clonage : " + error.message);
       loadObjectives(currentUser);
     }
 
     async function updateObjective(id, completed) {
-      await supabase
+      await supabaseClient
         .from("objectives")
         .update({ completed })
         .eq("id", id);
