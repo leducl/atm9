@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>ATM9 Tracker Multijoueur</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212; --card: #1e1e1e; --accent: #00d8ff;
+      --text: #f0f0f0; --check: #00ff88;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0; padding: 2rem;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem; text-align: center; color: var(--accent);
+    }
+    .category {
+      background: var(--card); padding: 1rem 2rem;
+      border-radius: 1rem; margin-bottom: 2rem;
+      box-shadow: 0 0 10px rgba(0, 216, 255, 0.2);
+    }
+    label {
+      display: flex; align-items: center; margin: 0.5rem 0;
+      cursor: pointer; padding: 0.4rem; border-radius: 8px;
+    }
+    label:hover { background: #292929; }
+    input[type="checkbox"] {
+      margin-right: 1rem; transform: scale(1.4);
+      accent-color: var(--check);
+    }
+    #login input { padding: 0.5rem; font-size: 1rem; }
+    #login button { padding: 0.5rem 1rem; margin-left: 1rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Objectifs ATM9 Multijoueur</h1>
+
+  <div id="login">
+    <label for="username">Entrez votre pseudo :</label>
+    <input type="text" id="username" placeholder="Ex: Joueur1">
+    <button onclick="loadObjectives()">Charger</button>
+  </div>
+
+  <div id="objectives"></div>
+
+  <script>
+    const SUPABASE_URL = "https://glercnffjbmetbystnwi.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsZXJjbmZmamJtZXRieXN0bndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NjgwNDQsImV4cCI6MjA2NjM0NDA0NH0.Z9JvWS5zNp8rqyAVkSEIiVpB63gxM5g8e8bL6u6C64w";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = "";
+
+    async function loadObjectives() {
+      const input = document.getElementById("username");
+      currentUser = input.value.trim();
+      if (!currentUser) return alert("Entre un pseudo valide.");
+
+      document.getElementById("login").style.display = "none";
+      const container = document.getElementById("objectives");
+      container.innerHTML = "<h2>Chargement des objectifs...</h2>";
+
+      const { data, error } = await supabase
+        .from("objectives")
+        .select("*")
+        .eq("username", currentUser);
+
+      if (error) {
+        container.innerHTML = "Erreur lors du chargement.";
+        console.error(error);
+        return;
+      }
+
+      if (data.length === 0) {
+        container.innerHTML = `
+          <p>Aucun objectif trouvé pour ce pseudo.<br>Cloner les objectifs de base ?</p>
+          <button onclick='cloneTemplate()'>Oui, cloner le modèle</button>
+        `;
+        return;
+      }
+
+      showObjectives(data);
+    }
+
+    async function cloneTemplate() {
+      const { data: template } = await supabase
+        .from("objectives")
+        .select("*")
+        .eq("username", "template");
+
+      const newData = template.map(obj => ({
+        username: currentUser,
+        objective: obj.objective,
+        completed: false
+      }));
+
+      const { error } = await supabase.from("objectives").insert(newData);
+      if (error) return alert("Erreur lors du clonage : " + error.message);
+      loadObjectives();
+    }
+
+    async function updateObjective(id, completed) {
+      await supabase
+        .from("objectives")
+        .update({ completed })
+        .eq("id", id);
+    }
+
+    function showObjectives(data) {
+      const container = document.getElementById("objectives");
+      container.innerHTML = "<h2>Objectifs de " + currentUser + "</h2>";
+      const grouped = {};
+
+      data.forEach(item => {
+        const [group] = item.objective.split(" - ");
+        if (!grouped[group]) grouped[group] = [];
+        grouped[group].push(item);
+      });
+
+      for (const category in grouped) {
+        const div = document.createElement("div");
+        div.className = "category";
+        const h2 = document.createElement("h2");
+        h2.textContent = category;
+        div.appendChild(h2);
+
+        grouped[category].forEach(item => {
+          const label = document.createElement("label");
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = item.completed;
+          checkbox.onchange = () => updateObjective(item.id, checkbox.checked);
+          label.appendChild(checkbox);
+          label.appendChild(document.createTextNode(item.objective.split(" - ")[1]));
+          div.appendChild(label);
+        });
+
+        container.appendChild(div);
+      }
+    }
+  </script>
+</body>
+</html>
