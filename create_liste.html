@@ -49,8 +49,6 @@
 <body>
   <h1>Créer une liste</h1>
   <div class="card">
-    <label for="pseudo">Votre pseudo :</label>
-    <input type="text" id="pseudo" placeholder="Pseudo" />
     <button onclick="creerListe()">Créer</button>
     <p id="status"></p>
   </div>
@@ -61,9 +59,15 @@
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsZXJjbmZmamJtZXRieXN0bndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NjgwNDQsImV4cCI6MjA2NjM0NDA0NH0.Z9JvWS5zNp8rqyAVkSEIiVpB63gxM5g8e8bL6u6C64w"
     );
 
+    const params = new URLSearchParams(window.location.search);
+    const pseudo = params.get('pseudo');
+    if (!pseudo) {
+      alert('Pseudo manquant, retour à l\'accueil');
+      window.location.href = 'index.html';
+    }
+
     async function creerListe() {
-      const pseudo = document.getElementById('pseudo').value.trim();
-      if (!pseudo) return alert('Entrez un pseudo valide.');
+      if (!pseudo) return;
 
       const { data: userData, error } = await supabase
         .from('utilisateurs')
