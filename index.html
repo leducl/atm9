@@ -79,7 +79,6 @@
     <label for="pseudo">Entrez votre pseudo :</label>
     <input type="text" id="pseudo" placeholder="Ex: Tom" />
     <button onclick="rechercherListes()">Rechercher mes listes</button>
-    <a href="create_liste.html" style="margin-left:0.5rem;">Créer une nouvelle liste</a>
   </div>
 
   <div id="listeGroup"></div>
@@ -132,6 +131,13 @@
         wrapper.appendChild(edit);
         listeGroup.appendChild(wrapper);
       });
+
+      const createLink = document.createElement("a");
+      createLink.href = `create_liste.html?pseudo=${encodeURIComponent(pseudo)}`;
+      createLink.textContent = "Créer une nouvelle liste";
+      createLink.style.display = "block";
+      createLink.style.marginTop = "1rem";
+      listeGroup.appendChild(createLink);
     }
 
     async function loadTaches(listeId) {
