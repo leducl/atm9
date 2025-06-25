@@ -44,11 +44,26 @@
     button:hover {
       background: #0055ff;
     }
+    .palier-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .palier-row input[type="text"] {
+      flex-grow: 1;
+    }
   </style>
 </head>
 <body>
   <h1>Créer une liste</h1>
   <div class="card">
+    <label for="nomListe">Nom de la liste</label>
+    <input type="text" id="nomListe" placeholder="Ma super liste" />
+
+    <h2>Paliers</h2>
+    <div id="paliers"></div>
+    <button type="button" onclick="ajouterPalier()">Ajouter un palier</button>
+
     <button onclick="creerListe()">Créer</button>
     <p id="status"></p>
   </div>
@@ -64,6 +79,34 @@
 
     }
 
+    const paliersDiv = document.getElementById('paliers');
+
+    function ajouterPalier(nom = '', ordre = '') {
+      const row = document.createElement('div');
+      row.className = 'palier-row';
+      const inputNom = document.createElement('input');
+      inputNom.type = 'text';
+      inputNom.placeholder = 'Nom du palier';
+      inputNom.value = nom;
+      inputNom.className = 'palier-nom';
+      const inputOrdre = document.createElement('input');
+      inputOrdre.type = 'number';
+      inputOrdre.placeholder = 'Ordre';
+      inputOrdre.value = ordre;
+      inputOrdre.className = 'palier-ordre';
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = 'X';
+      del.onclick = () => row.remove();
+      row.appendChild(inputNom);
+      row.appendChild(inputOrdre);
+      row.appendChild(del);
+      paliersDiv.appendChild(row);
+    }
+
+    // ajouter une ligne par defaut
+    ajouterPalier('Général', 1);
+
     async function creerListe() {
       if (!pseudo) return;
 
@@ -78,9 +121,11 @@
         return;
       }
 
+      const nomListe = document.getElementById('nomListe').value.trim();
+
       const { data: listeData, error: err2 } = await supabase
         .from('listes')
-        .insert([{ user_id: userData.id }])
+        .insert([{ user_id: userData.id, nom: nomListe || null }])
         .select()
         .single();
 
@@ -89,17 +134,26 @@
         return;
       }
 
-      await supabase.from('paliers').insert({
+      const palierRows = document.querySelectorAll('#paliers .palier-row');
+      const paliers = Array.from(palierRows).map(r => ({
+        nom: r.querySelector('.palier-nom').value.trim() || 'Palier',
+        ordre: parseInt(r.querySelector('.palier-ordre').value, 10) || 1
+      }));
+
+      const inserts = paliers.length ? paliers.map(p => ({
         id_liste: listeData.id,
-        ordre: 1,
-        nom: 'Général'
-      });
+        nom: p.nom,
+        ordre: p.ordre
+      })) : [{ id_liste: listeData.id, nom: 'Général', ordre: 1 }];
+
+      await supabase.from('paliers').insert(inserts);
 
       document.getElementById('status').textContent = `Liste créée avec l'id ${listeData.id}`;
     }
 
-    // Make the create handler accessible to the inline button
+    // Make functions accessible to inline buttons
     window.creerListe = creerListe;
+    window.ajouterPalier = ajouterPalier;
   </script>
 </body>
 </html>

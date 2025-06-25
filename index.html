@@ -106,7 +106,7 @@
 
       const { data: listes } = await supabase
         .from("listes")
-        .select("id")
+        .select("id, nom")
         .eq("user_id", currentUser);
 
       const listeGroup = document.getElementById("listeGroup");
@@ -116,7 +116,7 @@
         const wrapper = document.createElement("div");
         const btn = document.createElement("button");
         btn.className = "liste-btn";
-        btn.textContent = `Liste #${liste.id}`;
+        btn.textContent = liste.nom ? liste.nom : `Liste #${liste.id}`;
         btn.onclick = () => loadTaches(liste.id);
         const edit = document.createElement("button");
         edit.className = "edit-btn";
