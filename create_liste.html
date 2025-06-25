@@ -65,7 +65,7 @@
     }
 
     async function creerListe() {
-      
+      if (!pseudo) return;
 
       const { data: userData, error } = await supabase
         .from('utilisateurs')
