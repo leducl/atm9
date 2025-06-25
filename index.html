@@ -119,19 +119,21 @@
       const { data: paliers } = await supabase
         .from("paliers")
         .select("*")
-        .eq("id_liste", currentListe);
+        .eq("id_liste", currentListe)
+        .order("ordre", { ascending: true });
 
       paliersMap = Object.fromEntries(paliers.map(p => [p.id, p.nom]));
+      const orderedPalierIds = paliers.map(p => p.id);
 
       const { data: taches } = await supabase
         .from("taches")
         .select("*")
         .eq("id_liste", currentListe);
 
-      afficherTaches(taches);
+      afficherTaches(taches, orderedPalierIds);
     }
 
-    function afficherTaches(taches) {
+    function afficherTaches(taches, orderedPalierIds) {
       const container = document.getElementById("objectifs");
       container.innerHTML = "";
       const grouped = {};
@@ -141,7 +143,9 @@
         grouped[t.id_palier].push(t);
       });
 
-      Object.entries(grouped).forEach(([palierId, taches]) => {
+      orderedPalierIds.forEach(palierId => {
+        const taches = grouped[palierId];
+        if (!taches) return;
         const div = document.createElement("div");
         div.className = "tier";
 
