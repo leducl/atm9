@@ -1,8 +1,8 @@
 utilisateurs
-id | pseudo
+id | pseudo |
 
 listes
-| id | user_id (FK vers utilisateurs.id) |
+| id | user_id (FK vers utilisateurs.id) | nom |
 
 paliers
 | id | id_liste (FK vers listes.id) | ordre | nom |
