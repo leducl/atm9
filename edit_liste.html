@@ -54,10 +54,33 @@
       background: #ff0044;
       margin-left: 0.5rem;
     }
+    .palier-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .palier-row input[type="text"] {
+      flex-grow: 1;
+    }
   </style>
 </head>
 <body>
   <h1>Modifier une liste</h1>
+
+  <div class="card">
+    <h2>Nom de la liste</h2>
+    <input type="text" id="nomListe" />
+  </div>
+
+  <div class="card">
+    <h2>Paliers</h2>
+    <div id="palierList"></div>
+    <button type="button" onclick="ajouterPalier()">Ajouter un palier</button>
+  </div>
+
+  <button onclick="sauverListe()">Sauvegarder</button>
+
   <div id="tasks"></div>
   <div class="card">
     <h2>Ajouter une tâche</h2>
@@ -77,12 +100,47 @@
       loadData();
     }
 
+    const palierContainer = document.getElementById('palierList');
+
+    function ajouterPalier(nom = '', ordre = '', id = null) {
+      const row = document.createElement('div');
+      row.className = 'palier-row';
+      if (id) row.dataset.id = id;
+      const inputNom = document.createElement('input');
+      inputNom.type = 'text';
+      inputNom.placeholder = 'Nom du palier';
+      inputNom.value = nom;
+      inputNom.className = 'palier-nom';
+      const inputOrdre = document.createElement('input');
+      inputOrdre.type = 'number';
+      inputOrdre.placeholder = 'Ordre';
+      inputOrdre.value = ordre;
+      inputOrdre.className = 'palier-ordre';
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = 'X';
+      del.onclick = () => row.remove();
+      row.appendChild(inputNom);
+      row.appendChild(inputOrdre);
+      row.appendChild(del);
+      palierContainer.appendChild(row);
+    }
     async function loadData() {
+      const { data: liste } = await supabase
+        .from('listes')
+        .select('nom')
+        .eq('id', listeId)
+        .single();
+      document.getElementById('nomListe').value = liste?.nom || '';
+
       const { data: paliers } = await supabase
         .from('paliers')
         .select('*')
         .eq('id_liste', listeId)
         .order('ordre', { ascending: true });
+
+      palierContainer.innerHTML = '';
+      paliers.forEach(p => ajouterPalier(p.nom, p.ordre, p.id));
 
       const palierSelect = document.getElementById('palierSelect');
       palierSelect.innerHTML = '';
@@ -168,8 +226,32 @@
       loadData();
     }
 
+    async function sauverListe() {
+      const nom = document.getElementById('nomListe').value.trim();
+      await supabase.from('listes').update({ nom }).eq('id', listeId);
+
+      const rows = document.querySelectorAll('#palierList .palier-row');
+      for (const row of rows) {
+        const id = row.dataset.id;
+        const nomP = row.querySelector('.palier-nom').value.trim() || 'Palier';
+        const ordre = parseInt(row.querySelector('.palier-ordre').value, 10) || 1;
+        if (id) {
+          await supabase.from('paliers').update({ nom: nomP, ordre }).eq('id', id);
+        } else {
+          await supabase.from('paliers').insert({
+            id_liste: listeId,
+            nom: nomP,
+            ordre
+          });
+        }
+      }
+      loadData();
+    }
+
     // Allow the inline button to call addTask
     window.addTask = addTask;
+    window.ajouterPalier = ajouterPalier;
+    window.sauverListe = sauverListe;
   </script>
 </body>
 </html>
