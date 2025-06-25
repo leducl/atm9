@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Créer une liste</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #121212;
+      color: #f0f0f0;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      color: #00d8ff;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .card {
+      background: #1e1e1e;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 216, 255, 0.1);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    label, input, button {
+      display: block;
+      width: 100%;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+    }
+    button {
+      background: #0044ff;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0055ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Créer une liste</h1>
+  <div class="card">
+    <label for="pseudo">Votre pseudo :</label>
+    <input type="text" id="pseudo" placeholder="Pseudo" />
+    <button onclick="creerListe()">Créer</button>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      "https://glercnffjbmetbystnwi.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsZXJjbmZmamJtZXRieXN0bndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NjgwNDQsImV4cCI6MjA2NjM0NDA0NH0.Z9JvWS5zNp8rqyAVkSEIiVpB63gxM5g8e8bL6u6C64w"
+    );
+
+    async function creerListe() {
+      const pseudo = document.getElementById('pseudo').value.trim();
+      if (!pseudo) return alert('Entrez un pseudo valide.');
+
+      const { data: userData, error } = await supabase
+        .from('utilisateurs')
+        .select('id')
+        .eq('pseudo', pseudo)
+        .single();
+
+      if (error || !userData) {
+        alert('Utilisateur introuvable.');
+        return;
+      }
+
+      const { data: listeData, error: err2 } = await supabase
+        .from('listes')
+        .insert({ user_id: userData.id })
+        .select()
+        .single();
+
+      if (err2) {
+        alert("Erreur lors de la création de la liste");
+        return;
+      }
+
+      await supabase.from('paliers').insert({
+        id_liste: listeData.id,
+        ordre: 1,
+        nom: 'Général'
+      });
+
+      document.getElementById('status').textContent = `Liste créée avec l'id ${listeData.id}`;
+    }
+  </script>
+</body>
+</html>

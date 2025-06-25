@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Modifier une liste</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #121212;
+      color: #f0f0f0;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #00d8ff;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .card {
+      background: #1e1e1e;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 216, 255, 0.1);
+      margin-bottom: 1rem;
+    }
+    input, button, select {
+      font-size: 1rem;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    button {
+      background: #0044ff;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0055ff;
+    }
+    .task-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .task-row input[type="text"] {
+      flex-grow: 1;
+      margin-right: 0.5rem;
+    }
+    .delete-btn {
+      background: #ff0044;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Modifier une liste</h1>
+  <div id="tasks"></div>
+  <div class="card">
+    <h2>Ajouter une tâche</h2>
+    <input type="text" id="newTask" placeholder="Description" />
+    <select id="palierSelect"></select>
+    <button onclick="addTask()">Ajouter</button>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      "https://glercnffjbmetbystnwi.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsZXJjbmZmamJtZXRieXN0bndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NjgwNDQsImV4cCI6MjA2NjM0NDA0NH0.Z9JvWS5zNp8rqyAVkSEIiVpB63gxM5g8e8bL6u6C64w"
+    );
+
+    const params = new URLSearchParams(window.location.search);
+    const listeId = params.get('listeId');
+    if (!listeId) {
+      document.body.innerHTML = '<p>Liste introuvable.</p>';
+    } else {
+      loadData();
+    }
+
+    async function loadData() {
+      const { data: paliers } = await supabase
+        .from('paliers')
+        .select('*')
+        .eq('id_liste', listeId)
+        .order('ordre', { ascending: true });
+
+      const palierSelect = document.getElementById('palierSelect');
+      palierSelect.innerHTML = '';
+      paliers.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.nom;
+        palierSelect.appendChild(opt);
+      });
+
+      const { data: tasks } = await supabase
+        .from('taches')
+        .select('*')
+        .eq('id_liste', listeId);
+
+      renderTasks(tasks, paliers);
+    }
+
+    function renderTasks(tasks, paliers) {
+      const container = document.getElementById('tasks');
+      container.innerHTML = '';
+      const palierMap = Object.fromEntries(paliers.map(p => [p.id, p.nom]));
+      const grouped = {};
+      tasks.forEach(t => {
+        if (!grouped[t.id_palier]) grouped[t.id_palier] = [];
+        grouped[t.id_palier].push(t);
+      });
+
+      paliers.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        const h2 = document.createElement('h2');
+        h2.textContent = palierMap[p.id];
+        div.appendChild(h2);
+        (grouped[p.id] || []).forEach(t => {
+          const row = document.createElement('div');
+          row.className = 'task-row';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = t.description;
+          input.onchange = () => updateTaskDesc(t.id, input.value);
+          const check = document.createElement('input');
+          check.type = 'checkbox';
+          check.checked = t.terminee;
+          check.onchange = () => updateTaskDone(t.id, check.checked);
+          const del = document.createElement('button');
+          del.textContent = 'Supprimer';
+          del.className = 'delete-btn';
+          del.onclick = () => deleteTask(t.id);
+          row.appendChild(check);
+          row.appendChild(input);
+          row.appendChild(del);
+          div.appendChild(row);
+        });
+        container.appendChild(div);
+      });
+    }
+
+    async function updateTaskDesc(id, description) {
+      await supabase.from('taches').update({ description }).eq('id', id);
+    }
+
+    async function updateTaskDone(id, terminee) {
+      await supabase.from('taches').update({ terminee }).eq('id', id);
+    }
+
+    async function deleteTask(id) {
+      await supabase.from('taches').delete().eq('id', id);
+      loadData();
+    }
+
+    async function addTask() {
+      const description = document.getElementById('newTask').value.trim();
+      const palierId = document.getElementById('palierSelect').value;
+      if (!description) return;
+      await supabase.from('taches').insert({
+        id_liste: listeId,
+        description,
+        terminee: false,
+        id_palier: palierId
+      });
+      document.getElementById('newTask').value = '';
+      loadData();
+    }
+  </script>
+</body>
+</html>
