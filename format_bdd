@@ -1,0 +1,11 @@
+utilisateurs
+id | pseudo
+
+listes
+| id | user_id (FK vers utilisateurs.id) |
+
+paliers
+| id | id_liste (FK vers listes.id) | ordre | nom |
+
+taches
+| id | id_liste (FK vers listes.id) | description | terminee | id_palier (FK vers paliers.id) |
