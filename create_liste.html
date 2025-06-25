@@ -146,7 +146,11 @@
         ordre: p.ordre
       })) : [{ id_liste: listeData.id, nom: 'Général', ordre: 1 }];
 
-      await supabase.from('paliers').insert(inserts);
+      const { error: palierError } = await supabase.from('paliers').insert(inserts);
+      if (palierError) {
+        console.error('Erreur lors de l\'insertion des paliers', palierError);
+        return;
+      }
 
       document.getElementById('status').textContent = `Liste créée avec l'id ${listeData.id}`;
     }
