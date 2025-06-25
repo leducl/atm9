@@ -83,7 +83,7 @@
 
       const { data: listeData, error: err2 } = await supabase
         .from('listes')
-        .insert({ user_id: userData.id })
+        .insert([{ user_id: userData.id }])
         .select()
         .single();
 
