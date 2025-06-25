@@ -59,6 +59,17 @@
     .liste-btn:hover {
       background: #333;
     }
+    .edit-btn {
+      margin-left: 0.5rem;
+      background: #0044ff;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .edit-btn:hover {
+      background: #0055ff;
+    }
   </style>
 </head>
 <body>
@@ -68,6 +79,7 @@
     <label for="pseudo">Entrez votre pseudo :</label>
     <input type="text" id="pseudo" placeholder="Ex: Tom" />
     <button onclick="rechercherListes()">Rechercher mes listes</button>
+    <a href="create_liste.html" style="margin-left:0.5rem;">Créer une nouvelle liste</a>
   </div>
 
   <div id="listeGroup"></div>
@@ -105,11 +117,20 @@
       listeGroup.innerHTML = `<h2>Listes de ${pseudo}</h2>`;
 
       listes.forEach(liste => {
+        const wrapper = document.createElement("div");
         const btn = document.createElement("button");
         btn.className = "liste-btn";
         btn.textContent = `Liste #${liste.id}`;
         btn.onclick = () => loadTaches(liste.id);
-        listeGroup.appendChild(btn);
+        const edit = document.createElement("button");
+        edit.className = "edit-btn";
+        edit.textContent = "Modifier";
+        edit.onclick = () => {
+          window.location.href = `edit_liste.html?listeId=${liste.id}`;
+        };
+        wrapper.appendChild(btn);
+        wrapper.appendChild(edit);
+        listeGroup.appendChild(wrapper);
       });
     }
 
