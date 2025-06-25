@@ -167,6 +167,9 @@
       document.getElementById('newTask').value = '';
       loadData();
     }
+
+    // Allow the inline button to call addTask
+    window.addTask = addTask;
   </script>
 </body>
 </html>

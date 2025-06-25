@@ -137,6 +137,9 @@
       listeGroup.appendChild(createLink);
     }
 
+    // Expose the search function for the inline button handler
+    window.rechercherListes = rechercherListes;
+
     async function loadTaches(listeId) {
       currentListe = listeId;
 
