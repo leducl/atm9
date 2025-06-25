@@ -66,11 +66,8 @@
     <button onclick="addTask()">Ajouter</button>
   </div>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      "https://glercnffjbmetbystnwi.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsZXJjbmZmamJtZXRieXN0bndpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NjgwNDQsImV4cCI6MjA2NjM0NDA0NH0.Z9JvWS5zNp8rqyAVkSEIiVpB63gxM5g8e8bL6u6C64w"
-    );
+  <script type="module">
+    import supabase from './supabaseClient.js';
 
     const params = new URLSearchParams(window.location.search);
     const listeId = params.get('listeId');
