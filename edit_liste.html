@@ -93,7 +93,7 @@
     import supabase from './supabaseClient.js';
 
     const params = new URLSearchParams(window.location.search);
-    const listeId = params.get('listeId');
+    const listeId = parseInt(params.get('listeId'), 10);
     if (!listeId) {
       document.body.innerHTML = '<p>Liste introuvable.</p>';
     } else {
@@ -214,7 +214,7 @@
 
     async function addTask() {
       const description = document.getElementById('newTask').value.trim();
-      const palierId = document.getElementById('palierSelect').value;
+      const palierId = parseInt(document.getElementById('palierSelect').value, 10);
       if (!description) return;
       await supabase.from('taches').insert({
         id_liste: listeId,
@@ -232,17 +232,20 @@
 
       const rows = document.querySelectorAll('#palierList .palier-row');
       for (const row of rows) {
-        const id = row.dataset.id;
+        const id = row.dataset.id ? parseInt(row.dataset.id, 10) : null;
         const nomP = row.querySelector('.palier-nom').value.trim() || 'Palier';
         const ordre = parseInt(row.querySelector('.palier-ordre').value, 10) || 1;
-        if (id) {
+        if (id !== null) {
           await supabase.from('paliers').update({ nom: nomP, ordre }).eq('id', id);
         } else {
-          await supabase.from('paliers').insert({
+          const { error: insertError } = await supabase.from('paliers').insert({
             id_liste: listeId,
             nom: nomP,
             ordre
           });
+          if (insertError) {
+            console.error('Erreur insertion palier', insertError);
+          }
         }
       }
       loadData();
